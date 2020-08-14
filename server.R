@@ -1,6 +1,6 @@
+prefix  =  '.'
 source( 'results_analysis.R' )
 
-prefix  =  '.'
 all_phenotypes  =  read_rds( sprintf( '%s/data/all_phenotypes_combined.rds',
                                       prefix ) )
 

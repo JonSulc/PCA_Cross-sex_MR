@@ -7,12 +7,8 @@ require( reshape2 )
 require( scales )
 require( igraph )
 require( deming )
-if (is.null(prefix)) {
-    PREFIX = '.'
-} else {
-    PREFIX = prefix
-}
 
+PREFIX = '.'
 
 THRESHOLD  =  5e-2
 GW_THRESHOLD  =  5e-8
