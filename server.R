@@ -37,7 +37,7 @@ server  =  function( input, output, session ) {
                                 sexy_outcome = 'female',
                                 exposure_type_1 = input$exposure_type,
                                 exposure_type_2 = input$exposure_type,
-                                outcome_type  = 't',
+                                outcome_type  = input$outcome_type,
                                 exp_trait_1 = exposure,
                                 exp_trait_2 = exposure,
                                 separate_xy   = 'separate_xy' %in% input$plot_options,
@@ -109,7 +109,7 @@ server  =  function( input, output, session ) {
                                 sexy_outcome = input$sexy_outcome,
                                 exposure_type_1 = input$type_1,
                                 exposure_type_2 = input$type_2,
-                                outcome_type = 't',
+                                outcome_type = input$outcome_type,
                                 exp_trait_1  = exposure_1,
                                 exp_trait_2  = exposure_2,
                                 separate_xy  = 'separate_xy' %in% input$plot_options,
@@ -234,6 +234,24 @@ server  =  function( input, output, session ) {
             'dxa_2',
             'Y DXA trait',
             choices = dxa_traits
+        )
+    })
+    
+    output$outcome_type_select  =  renderUI({
+        if (input$outcome_category == 'body') {
+            choices = list( 'PC'    = 'p',
+                            'Trait' = 't' )
+            selected = 'p'
+        } else {
+            choices = list( 'Trait' = 't' )
+            selected = 't'
+        }
+        radioButtons(
+            'outcome_type',
+            'Outcome type',
+            choices = choices,
+            selected = selected,
+            inline = TRUE
         )
     })
     output$outcome_select  =  renderUI({

@@ -635,11 +635,15 @@ compare_2_exposures  =  function( exposure_category_1,
     
     sex  =  sex_name( sex_exposure,
                       sex_ivs = sex_ivs,
-                      sex_pca = sex_pca,
+                      sex_pca = ifelse( exposure_type_1 == 'dxa',
+                                        'both_sexes',
+                                        sex_pca ),
                       sex_outcome = sex_outcome )
     sexy  =  sex_name( sexy_exposure,
                        sex_ivs = sexy_ivs,
-                       sex_pca = sexy_pca,
+                       sex_pca = ifelse( exposure_type_2 == 'dxa',
+                                         'both_sexes',
+                                         sexy_pca ),
                        sex_outcome = sexy_outcome )
     mrx  =  tryCatch({
         sprintf( '%s/%s/%s_%s_%sv%s_mr.rds',
@@ -677,9 +681,9 @@ compare_2_exposures  =  function( exposure_category_1,
     } else {
         threshold_x = threshold_y = threshold
     }
-    if (exposure_type_1 == 't')
+    if (exposure_type_1 != 'p')
         exp_trait_1  =  .convert_name( exp_trait_1, mrx, all_phenotypes )
-    if (exposure_type_2 == 't')
+    if (exposure_type_2 != 'p')
         exp_trait_2  =  .convert_name( exp_trait_2, mry, all_phenotypes )
     
     common_outcomes  =  list( mrx$b, mry$b ) %>%
@@ -1108,7 +1112,9 @@ bidirectional_mr_plot  =  function( category_1,
     
     sex_full = sex_name( sex,
                          sex_ivs = sex_ivs,
-                         sex_pca = sex_pca )
+                         sex_pca = ifelse( 'dxa' %in% c(type_1, type_2),
+                                           'both_sexes',
+                                           sex_pca ) )
     
     direction_1  =  tryCatch({
         sprintf( '%s/%s/%s_%s_%sv%s_mr.rds',
@@ -1190,7 +1196,7 @@ bidirectional_mr_plot  =  function( category_1,
     }
     
     if (!is.null( trait )) {
-        if(type_1 == 't'){
+        if(type_1 != 'p'){
             trait   =  .convert_name( trait, direction_1, all_phenotypes )
             direction_1  =  direction_1 %>%
                 lapply( function( x ) x[ trait, , drop = FALSE ] )
