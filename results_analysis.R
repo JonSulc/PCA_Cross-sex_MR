@@ -641,26 +641,35 @@ compare_2_exposures  =  function( exposure_category_1,
                        sex_ivs = sexy_ivs,
                        sex_pca = sexy_pca,
                        sex_outcome = sexy_outcome )
+    mrx  =  tryCatch({
+        sprintf( '%s/%s/%s_%s_%sv%s_mr.rds',
+                         x_path,
+                         sex,
+                         exposure_category_1,
+                         outcome_category,
+                         exposure_type_1,
+                         outcome_type ) %>%
+            read_rds %>%
+            '['( c( 'b', 'se', 'pval' ) )
+    },
+    error = function(e){
+        stop( 'Invalid combination of parameters for X' )
+    })
     
-    mrx  =  sprintf( '%s/%s/%s_%s_%sv%s_mr.rds',
-                     x_path,
-                     sex,
-                     exposure_category_1,
-                     outcome_category,
-                     exposure_type_1,
-                     outcome_type ) %>%
-        read_rds %>%
-        '['( c( 'b', 'se', 'pval' ) )
-    
-    mry  =  sprintf( '%s/%s/%s_%s_%sv%s_mr.rds',
-                     y_path,
-                     sexy,
-                     exposure_category_2,
-                     outcome_category,
-                     exposure_type_2,
-                     outcome_type ) %>%
-        read_rds %>%
-        '['( c( 'b', 'se', 'pval' ) )
+    mry  =  tryCatch({
+        sprintf( '%s/%s/%s_%s_%sv%s_mr.rds',
+                 y_path,
+                 sexy,
+                 exposure_category_2,
+                 outcome_category,
+                 exposure_type_2,
+                 outcome_type ) %>%
+            read_rds %>%
+            '['( c( 'b', 'se', 'pval' ) )
+    },
+    error = function(e){
+        stop( 'Invalid combination of parameters for Y' )
+    })
     
     if (bonferroni_correction) {
         threshold_x  =  threshold / prod( dim( mrx$b ) )
@@ -898,6 +907,7 @@ barplot_pcs  =  function( category,
                           sex = 'both_sexes',
                           sex_pca = '',
                           show_sexes = c( 'both_sexes', 'female', 'male' ),
+                          match_pc_numbers = TRUE,
                           single = length( show_sexes ) == 1,
                           keep_order = FALSE ){
     if (category == 'brain') {
@@ -936,6 +946,13 @@ barplot_pcs  =  function( category,
         } )
     
     numbers  =  rep( pc_number, 3 )
+    if (match_pc_numbers) {
+        if (pc_number == 3) {
+            numbers[3] = 4
+        } else if (pc_number == 4) {
+            numbers[3] = 3
+        }
+    }
     names( numbers )  =  c( 'both_sexes', 'female', 'male' )
     
     pc_names  =  names( numbers ) %>%
@@ -1085,30 +1102,43 @@ bidirectional_mr_plot  =  function( category_1,
                                                               sex ) %>%
                                         read_rds,
                                     ... ){
+    if (category_1 == category_2) {
+        stop( 'You must select different categories' )
+    }
     
     sex_full = sex_name( sex,
                          sex_ivs = sex_ivs,
                          sex_pca = sex_pca )
     
-    direction_1  =  sprintf( '%s/%s/%s_%s_%sv%s_mr.rds',
-                             path,
-                             sex_full,
-                             category_1,
-                             category_2,
-                             type_1,
-                             type_2 ) %>%
-        read_rds %>%
-        '['( c( 'b', 'se', 'pval' ) )
+    direction_1  =  tryCatch({
+        sprintf( '%s/%s/%s_%s_%sv%s_mr.rds',
+                 path,
+                 sex_full,
+                 category_1,
+                 category_2,
+                 type_1,
+                 type_2 ) %>%
+            read_rds %>%
+            '['( c( 'b', 'se', 'pval' ) )
+    },
+    error = function(e){
+        stop( 'Invalid combination of parameters' )
+    })
     
-    direction_2  =  sprintf( '%s/%s/%s_%s_%sv%s_mr.rds',
-                             path,
-                             sex_full,
-                             category_2,
-                             category_1,
-                             type_2,
-                             type_1 ) %>%
-        read_rds %>%
-        '['( c( 'b', 'se', 'pval' ) )
+    direction_2  =  tryCatch({
+        sprintf( '%s/%s/%s_%s_%sv%s_mr.rds',
+                 path,
+                 sex_full,
+                 category_2,
+                 category_1,
+                 type_2,
+                 type_1 ) %>%
+            read_rds %>%
+            '['( c( 'b', 'se', 'pval' ) )
+    },
+    error = function(e){
+        stop( 'Invalid combination of parameters' )
+    })
     
     if (bonferroni_correction) {
         threshold_x  =  threshold / ( dim( direction_1$b ) %>% prod )

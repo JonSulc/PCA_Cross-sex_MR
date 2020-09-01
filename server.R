@@ -37,7 +37,7 @@ server  =  function( input, output, session ) {
                                 sexy_outcome = 'female',
                                 exposure_type_1 = input$exposure_type,
                                 exposure_type_2 = input$exposure_type,
-                                outcome_type  = input$outcome_type,
+                                outcome_type  = 't',
                                 exp_trait_1 = exposure,
                                 exp_trait_2 = exposure,
                                 separate_xy   = 'separate_xy' %in% input$plot_options,
@@ -109,7 +109,7 @@ server  =  function( input, output, session ) {
                                 sexy_outcome = input$sexy_outcome,
                                 exposure_type_1 = input$type_1,
                                 exposure_type_2 = input$type_2,
-                                outcome_type = input$outcome_type,
+                                outcome_type = 't',
                                 exp_trait_1  = exposure_1,
                                 exp_trait_2  = exposure_2,
                                 separate_xy  = 'separate_xy' %in% input$plot_options,
@@ -126,15 +126,15 @@ server  =  function( input, output, session ) {
                                 flip_line = 'flip_line' %in% input$plot_options )
             myplot <<- do.call( compare_2_exposures, arguments )
         } else if (input$mrtype == 'pcbar') {
-            if ('all_loadings' %in% input$pcbar_options) {
-                threshold = 0
-            } else {
+            if ('filter_loadings' %in% input$pcbar_options) {
                 threshold = NULL
+            } else {
+                threshold = 0
             }
-            arguments  <<-  list( category   = input$bar_pc_category,
+            arguments  <<-  list( category   = 'body',
                                   pc_number  = input$bar_pc_number,
-                                  sex        = input$bar_sex,
-                                  sex_pca    = input$bar_sex_pca,
+                                  sex        = 'both_sexes',
+                                  sex_pca    = '',
                                   show_sexes = input$show_sexes,
                                   data_path  = DATA_PATH,
                                   threshold  = threshold,
@@ -148,6 +148,25 @@ server  =  function( input, output, session ) {
         } else if (input$mrtype == 'pascal_heatmap') {
             pascal_heatmap()
         }
+    })
+    
+    output$type_1_select  =  renderUI({
+        if (input$category_1 == 'body') {
+            choices = list( 'PC'    = 'p',
+                            'Trait' = 't',
+                            'DXA'   = 'dxa' )
+            selected = 'p'
+        } else {
+            choices = list( 'Trait' = 't' )
+            selected = 't'
+        }
+        radioButtons(
+            'type_1',
+            'X type',
+            choices = choices,
+            selected = selected,
+            inline = TRUE
+        )
     })
     output$trait_select  =  renderUI({
         traits  =  all_phenotypes %>%
@@ -184,6 +203,22 @@ server  =  function( input, output, session ) {
         )
     })
     
+    output$type_2_select  =  renderUI({
+        if (input$category_2 == 'body') {
+            choices = list( 'PC'    = 'p',
+                            'Trait' = 't',
+                            'DXA'   = 'dxa' )
+        } else {
+            choices = list( 'Trait' = 't' )
+        }
+        radioButtons(
+            'type_2',
+            'X type',
+            choices = choices,
+            selected = 't',
+            inline = TRUE
+        )
+    })
     output$trait_2_select  =  renderUI({
         traits_2  =  all_phenotypes %>%
             filter( category == input$category_2 )

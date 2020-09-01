@@ -59,7 +59,7 @@ ui  =  dashboardPage(
                                                  radioButtons(
                                                      'sex',
                                                      h3( 'Sex (Betas)' ),
-                                                     choices = list( 'Both'   = 'both_sexes',
+                                                     choices = list( 'X-sex meta'   = 'both_sexes',
                                                                      'Female' = 'female',
                                                                      'Male'   = 'male' ),
                                                      selected = 'both_sexes',
@@ -91,34 +91,6 @@ ui  =  dashboardPage(
                                      )
                                  ),
                                  conditionalPanel(
-                                     condition = 'input.mrtype == "pcbar"',
-                                     fluidRow(
-                                         column( 6,
-                                                 radioButtons(
-                                                     'bar_sex',
-                                                     h3( 'Sex (Main)' ),
-                                                     choices = list( 'Both'   = 'both_sexes',
-                                                                     'Female' = 'female',
-                                                                     'Male'   = 'male' ),
-                                                     selected = 'both_sexes',
-                                                     inline = FALSE
-                                                 )
-                                         ),
-                                         column( 6,
-                                                 radioButtons(
-                                                     'bar_sex_pca',
-                                                     h3( 'Sex (PCA)' ),
-                                                     choices = list( 'Both'   = 'both_sexes',
-                                                                     'Female' = 'female',
-                                                                     'Male'   = 'male',
-                                                                     'Native' = '' ),
-                                                     selected = '',
-                                                     inline = FALSE
-                                                 )
-                                         )
-                                     )
-                                 ),
-                                 conditionalPanel(
                                      condition = 'input.mrtype == "mvf"',
                                      fluidRow(
                                          column( 7,
@@ -127,7 +99,6 @@ ui  =  dashboardPage(
                                                      'Exposure category',
                                                      choices = list( 'Body'       = 'body',
                                                                      'Biomarkers' = 'disease_proxy',
-                                                                     'Brain'      = 'brain',
                                                                      'Diet'       = 'diet',
                                                                      'Diseases'   = 'disease',
                                                                      'Lifestyle'  = 'lifestyle' ),
@@ -172,7 +143,7 @@ ui  =  dashboardPage(
                                                  radioButtons(
                                                      'sexx_exposure',
                                                      'Sex exposure',
-                                                     choices = list( 'Both'   = 'both_sexes',
+                                                     choices = list( 'X-sex meta'   = 'both_sexes',
                                                                      'Female' = 'female',
                                                                      'Male'   = 'male' ),
                                                      selected = 'both_sexes'
@@ -182,7 +153,7 @@ ui  =  dashboardPage(
                                                  radioButtons(
                                                      'sexx_outcome',
                                                      'Sex outcome',
-                                                     choices = list( 'Both'   = 'both_sexes',
+                                                     choices = list( 'X-sex meta'   = 'both_sexes',
                                                                      'Female' = 'female',
                                                                      'Male'   = 'male' ),
                                                      selected = 'both_sexes'
@@ -215,7 +186,7 @@ ui  =  dashboardPage(
                                                  radioButtons(
                                                      'sexy_exposure',
                                                      'Sex exposure',
-                                                     choices = list( 'Both'   = 'both_sexes',
+                                                     choices = list( 'X-sex meta'   = 'both_sexes',
                                                                      'Female' = 'female',
                                                                      'Male'   = 'male' ),
                                                      selected = 'both_sexes'
@@ -225,7 +196,7 @@ ui  =  dashboardPage(
                                                  radioButtons(
                                                      'sexy_outcome',
                                                      'Sex outcome',
-                                                     choices = list( 'Both'   = 'both_sexes',
+                                                     choices = list( 'X-sex meta'   = 'both_sexes',
                                                                      'Female' = 'female',
                                                                      'Male'   = 'male' ),
                                                      selected = 'both_sexes'
@@ -262,7 +233,6 @@ ui  =  dashboardPage(
                                                      'X category',
                                                      choices = list( 'Body'       = 'body',
                                                                      'Biomarkers' = 'disease_proxy',
-                                                                     'Brain'      = 'brain',
                                                                      'Diet'       = 'diet',
                                                                      'Diseases'   = 'disease',
                                                                      'Lifestyle'  = 'lifestyle' ),
@@ -270,15 +240,7 @@ ui  =  dashboardPage(
                                                  )
                                          ),
                                          column( 5,
-                                                 radioButtons(
-                                                     'type_1',
-                                                     'X type',
-                                                     choices = list( 'PC'    = 'p',
-                                                                     'Trait' = 't',
-                                                                     'DXA'   = 'dxa' ),
-                                                     selected = 'p',
-                                                     inline = TRUE
-                                                 )
+                                                 uiOutput( 'type_1_select' )
                                          )
                                      ),
                                      conditionalPanel(
@@ -304,7 +266,6 @@ ui  =  dashboardPage(
                                                      'Y category',
                                                      choices = list( 'Body'       = 'body',
                                                                      'Biomarkers' = 'disease_proxy',
-                                                                     'Brain'      = 'brain',
                                                                      'Diet'       = 'diet',
                                                                      'Diseases'   = 'disease',
                                                                      'Lifestyle'  = 'lifestyle' ),
@@ -312,15 +273,7 @@ ui  =  dashboardPage(
                                                  )
                                          ),
                                          column( 5,
-                                                 radioButtons(
-                                                     'type_2',
-                                                     'Y type',
-                                                     choices = list( 'PC'    = 'p',
-                                                                     'Trait' = 't',
-                                                                     'DXA'   = 'dxa' ),
-                                                     selected = 't',
-                                                     inline = TRUE
-                                                 )
+                                                 uiOutput( 'type_2_select' )
                                          )
                                      ),
                                      conditionalPanel(
@@ -353,21 +306,10 @@ ui  =  dashboardPage(
                                                      'Outcome category',
                                                      choices = list( 'Body'       = 'body',
                                                                      'Biomarkers' = 'disease_proxy',
-                                                                     'Brain'      = 'brain',
                                                                      'Diet'       = 'diet',
                                                                      'Diseases'   = 'disease',
                                                                      'Lifestyle'  = 'lifestyle' ),
                                                      selected = 'disease'
-                                                 )
-                                         ),
-                                         column( 5,
-                                                 radioButtons(
-                                                     'outcome_type',
-                                                     'Outcome type',
-                                                     choices = list( 'PC'    = 'p',
-                                                                     'Trait' = 't',
-                                                                     'DXA'   = 'dxa' ),
-                                                     selected = 't'
                                                  )
                                          )
                                      )
@@ -386,17 +328,6 @@ ui  =  dashboardPage(
                                  ),
                                  conditionalPanel(
                                      condition = 'input.mrtype == "pcbar"',
-                                     selectInput(
-                                         'bar_pc_category',
-                                         h3( 'PC category' ),
-                                         choices = list( 'Body'       = 'body',
-                                                         'Biomarkers' = 'disease_proxy',
-                                                         'Brain'      = 'brain',
-                                                         'Diet'       = 'diet',
-                                                         'Diseases'   = 'disease',
-                                                         'Lifestyle'  = 'lifestyle' ),
-                                         selected = 'body'
-                                     ),
                                      numericInput(
                                          'bar_pc_number',
                                          h3( 'PC number' ),
@@ -423,7 +354,7 @@ ui  =  dashboardPage(
                                          'pcbar_options',
                                          '',
                                          choices = list(
-                                             'Show all loadings' = 'all_loadings',
+                                             'Hide weak loadings' = 'filter_loadings',
                                              'Sort' = 'sort'
                                          ),
                                          selected = c( 'sort' ),
