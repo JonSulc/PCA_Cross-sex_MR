@@ -257,7 +257,7 @@ ui  =  dashboardPage(
                                      ),
                                      conditionalPanel(
                                          condition = 'input.type_1 == "dxa"',
-                                         uiOutput( 'dxa_1_select')
+                                         uiOutput( 'dxa_1_select' )
                                      ),
                                      fluidRow(
                                          column( 7,
@@ -311,6 +311,9 @@ ui  =  dashboardPage(
                                                                      'Lifestyle'  = 'lifestyle' ),
                                                      selected = 'disease'
                                                  )
+                                         ),
+                                         column( 5,
+                                                 uiOutput( 'outcome_type_select' )
                                          )
                                      )
                                  ),
