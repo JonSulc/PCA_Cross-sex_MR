@@ -8,8 +8,6 @@ require( scales )
 require( igraph )
 require( deming )
 
-PREFIX = '.'
-
 THRESHOLD  =  5e-2
 GW_THRESHOLD  =  5e-8
 BONFERRONI_CORRECTION  =  TRUE
@@ -33,6 +31,41 @@ PASCAL_PATH = 'pascal/'
 
 # Filename blanks: path, sex_pca initial, 'pc' or '', pc number or trait, sex
 PASCAL_FILENAME = '%s/body_%s%s%s_%s.PathwaySet--depict_discretized_cutoff3.2--sum.txt'
+
+sex_name  =  function( sex_exposure,
+                       sex_ivs = 'both_sexes',
+                       sex_pca = sex_ivs,
+                       sex_outcome = sex_exposure ){
+    
+    
+    if (sex_exposure != sex_outcome) {
+        sex  =  sex_ivs %>%
+            str_sub( 1, 1 ) %>%
+            sprintf( '%s_exp_%s_out_%s',
+                     sex_exposure,
+                     sex_outcome,
+                     . )
+    } else if (sex_exposure != sex_ivs){
+        sex  =  sex_ivs %>%
+            str_sub( 1, 1 ) %>%
+            paste0( sex_exposure, '_', . )
+    } else if (sex_pca != sex_ivs) {
+        return( sprintf( '%s_%sivs_%spca',
+                         sex_exposure,
+                         str_sub( sex_ivs, 1, 1 ),
+                         str_sub( sex_pca, 1, 1 ) ) )
+    } else {
+        return( sex_exposure )
+    }
+    
+    if (sex_pca != sex_ivs) {
+        return( sprintf( '%sivs_%spca',
+                         sex,
+                         str_sub( sex_pca, 1, 1 ) ) )
+    }
+    
+    sex
+}
 
 if (!file.exists( PROCESSED_DESCRIPTION )) {
     sort_depict_groups  =  function( description ) {
@@ -70,38 +103,6 @@ if (!file.exists( PROCESSED_DESCRIPTION )) {
         filter( str_detect(Name, '^MP:') ) %>%
         mutate( group = sort_depict_groups( MetaCluster_Desc ) )
     write_rds( descriptions, PROCESSED_DESCRIPTION )
-}
-
-sex_name  =  function( sex_exposure,
-                        sex_ivs = sex_exposure,
-                        sex_pca = sex_ivs,
-                        sex_outcome = sex_exposure ){
-    if (sex_exposure != sex_outcome) {
-        sex  =  sex_ivs %>%
-            str_sub( 1, 1 ) %>%
-            sprintf( '%s_exp_%s_out_%s',
-                     sex_exposure,
-                     sex_outcome,
-                     . )
-    } else if (sex_exposure != sex_ivs){
-        sex  =  sex_ivs %>%
-            str_sub( 1, 1 ) %>%
-            paste0( sex_exposure, '_', . )
-    } else if (sex_pca != sex_ivs) {
-        return( sprintf( '%s_%sivs_%spca',
-                         sex_exposure,
-                         str_sub( sex_ivs, 1, 1 ),
-                         str_sub( sex_pca, 1, 1 ) ) )
-    } else {
-        return( sex_exposure )
-    }
-    
-    if (sex_pca != sex_ivs) {
-        return( sprintf( '%sivs_%spca',
-                         sex,
-                         str_sub( sex_pca, 1, 1 ) ) )
-    }
-    sex
 }
 
 
@@ -230,6 +231,7 @@ interactive_mr_plot  =  function( mrxb,
                                   add_regression_line = FALSE,
                                   leave_labels = FALSE,
                                   error_bar_size = qnorm( 0.975 )){
+    
     data_to_plot  =  tibble( mrxb          = mrxb,
                              mrxs          = mrxs,
                              mrxp          = mrxp,
@@ -247,38 +249,45 @@ interactive_mr_plot  =  function( mrxb,
                              group         = c( 'Not significant', x_label, y_label, 'Both' )[ x_significant + 2*y_significant - 2],
                              subcategory   = outcome_descriptions$group,
                              key           = names( mrxb ),
-                             toggle        = key %in% selected )# %>%
-    # mutate( mrxe = mrxs * (-qnorm( threshold_x/2 )),
-    #         mrye = mrys * (-qnorm( threshold_y/2 )) )
+                             toggle        = key %in% selected )
     
-    # data_to_plot <<- data_to_plot
+    if (x_label == y_label) {
+        data_to_plot$group = c( 'Not significant',
+                                paste(x_label,'(x)'),
+                                paste(y_label,'(y)'),
+                                'Both' )[ data_to_plot$x_significant + 2*data_to_plot$y_significant - 2]
+    }
     
     if (!is.null( outcome_descriptions$description )) {
         data_to_plot  =  data_to_plot %>%
             mutate_at( c( 'mrxp', 'mryp', 'separate_p', 'separate_neg_p' ),
                        function( x ) formatC( x, format = 'e', digits = 2 ) ) %>%
             mutate( xb = formatC( mrxb, digits = 2 ),
+                    xl = formatC( mrxb+qnorm(.025)*mrxs, digits = 2 ),
+                    xu = formatC( mrxb+qnorm(.975)*mrxs, digits = 2 ),
                     yb = formatC( mryb, digits = 2 ),
+                    yl = formatC( mryb+qnorm(.025)*mrys, digits = 2 ),
+                    yu = formatC( mryb+qnorm(.975)*mrys, digits = 2 ),
                     phenotype_group = outcome_descriptions$group )
         if (flip_line) {
             data_to_plot  =  data_to_plot %>%
                 mutate( description = sprintf( '%s
-%s b = %s, p = %s
-%s b = %s, p = %s
+%s b = %s, p = %s, CI: [%s-%s]
+%s b = %s, p = %s, CI: [%s-%s]
 p_diff = %s',
                                                outcome_descriptions$description %>% str_to_title,
-                                               x_label, xb, mrxp,
-                                               y_label, yb, mryp,
+                                               x_label, xb, mrxp, xl, xu,
+                                               y_label, yb, mryp, yl, yu,
                                                separate_neg_p ) )
         } else {
             data_to_plot  =  data_to_plot  %>%
                 mutate( description = sprintf( '%s
-%s b = %s, p = %s
-%s b = %s, p = %s
+%s b = %s, p = %s, CI: [%s-%s]
+%s b = %s, p = %s, CI: [%s-%s]
 p_diff = %s',
                                                outcome_descriptions$description %>% str_to_title,
-                                               x_label, xb, mrxp,
-                                               y_label, yb, mryp,
+                                               x_label, xb, mrxp, xl, xu,
+                                               y_label, yb, mryp, yl, yu,
                                                separate_p ) )
         }
     } else {
@@ -287,6 +296,7 @@ p_diff = %s',
     
     data_to_plot  =  data_to_plot %>%
         filter( !is.na( mrxb ) & !is.na( mryb ) )
+    data_to_plot <<- data_to_plot
     
     if (show_subcategories) {
         data_to_plot  =  data_to_plot %>%
@@ -335,11 +345,15 @@ p_diff = %s',
                           name   = 'Not significant',
                           value = list( marker = list( color  = '#848484',
                                                        symbol = 'circle-open' ) ) ),
-                    list( target = x_label,
+                    list( target = ifelse( x_label == y_label,
+                                           paste( x_label, '(x)' ),
+                                           x_label ),
                           name   = x_label,
                           value = list( marker = list( color  = 'blue',
                                                        symbol = 'triangle-down' ) ) ),
-                    list( target = y_label,
+                    list( target = ifelse( x_label == y_label,
+                                           paste( y_label, '(y)' ),
+                                           y_label ),
                           name   = y_label,
                           value = list( marker = list( color  = 'red',
                                                        symbol = 'triangle-left' ) ) ),
@@ -509,6 +523,7 @@ add_deming_regression_line  =  function( p,
                                          conf_int = TRUE,
                                          flip_line = FALSE,
                                          ... ) {
+    test  <<-  list( p = p, x = x, y = y, xs = xs, ys = ys, all_lines = all_lines )
     slope  =  deming( y ~ x-1,
                       xstd = xs, ystd = ys,
                       jackknife = FALSE )$coefficients[ 2 ]
@@ -539,22 +554,27 @@ add_deming_regression_line  =  function( p,
                        y1 = regression_line$y[ 2 ]) ) )
     
     if (conf_int) {
-        upper  =  (atan( slope ) + qnorm( 0.975 ) * jackknife_se) %>%
-            tan %>%
-            line_coordinates( c(-1,1), c(-1,1), slope = . )
-        lower  =  (atan( slope ) - qnorm( 0.975 ) * jackknife_se) %>%
-            tan %>%
-            line_coordinates( c(-1,1), c(-1,1), slope = . )
+        regression_line  =  regression_line %>%
+            reduce( rbind )
+        angle  =  ( qnorm(.975) * jackknife_se )
+        upper  =  matrix( c( cos(angle),  sin(angle),  -sin(angle), cos(angle) ), nrow = 2 ) %*% regression_line * 2
+        lower  =  matrix( c( cos(angle), -sin(angle),   sin(angle), cos(angle) ), nrow = 2 ) %*% regression_line * 2
+        # upper  =  (atan( slope ) + qnorm( 0.975 ) * jackknife_se) %>%
+        #     tan %>%
+        #     line_coordinates( c(-1,1), c(-1,1), slope = . )
+        # lower  =  (atan( slope ) - qnorm( 0.975 ) * jackknife_se) %>%
+        #     tan %>%
+        #     line_coordinates( c(-1,1), c(-1,1), slope = . )
         all_lines  =  list( list( type = 'path',
                                   path = sprintf( 'M0 0 L%f %f L%f %f L0 0 L%f %f L%f %f Z',
-                                                  upper$x[ 1 ],
-                                                  upper$y[ 1 ],
-                                                  lower$x[ 1 ],
-                                                  lower$y[ 1 ],
-                                                  upper$x[ 2 ],
-                                                  upper$y[ 2 ],
-                                                  lower$x[ 2 ],
-                                                  lower$y[ 2 ] ),
+                                                  upper[ 1, 1 ],
+                                                  upper[ 2, 1 ],
+                                                  lower[ 1, 1 ],
+                                                  lower[ 2, 1 ],
+                                                  upper[ 1, 2 ],
+                                                  upper[ 2, 2 ],
+                                                  lower[ 1, 2 ],
+                                                  lower[ 2, 2 ] ),
                                   line = list( width = 0 ),
                                   fillcolor = 'rgba(128,128,128,.1)' ) ) %>%
             c( all_lines )
@@ -595,12 +615,12 @@ compare_2_exposures  =  function( exposure_category_1,
                                   exposure_category_2,
                                   outcome_category,
                                   sex_exposure  = 'both_sexes',
-                                  sex_ivs  = sex_exposure,
-                                  sex_pca  = sex_ivs,
+                                  sex_ivs  = 'both_sexes',
+                                  sex_pca  = 'both_sexes',
                                   sex_outcome  = sex_exposure,
                                   sexy_exposure = sex_exposure,
                                   sexy_ivs = sex_ivs,
-                                  sexy_pca = sexy_ivs,
+                                  sexy_pca = sex_pca,
                                   sexy_outcome = sexy_exposure,
                                   exposure_type_1 = 'p',
                                   exposure_type_2 = 'p',
@@ -635,45 +655,32 @@ compare_2_exposures  =  function( exposure_category_1,
     
     sex  =  sex_name( sex_exposure,
                       sex_ivs = sex_ivs,
-                      sex_pca = ifelse( exposure_type_1 == 'dxa',
-                                        'both_sexes',
-                                        sex_pca ),
+                      sex_pca = sex_pca,
                       sex_outcome = sex_outcome )
     sexy  =  sex_name( sexy_exposure,
                        sex_ivs = sexy_ivs,
-                       sex_pca = ifelse( exposure_type_2 == 'dxa',
-                                         'both_sexes',
-                                         sexy_pca ),
+                       sex_pca = sexy_pca,
                        sex_outcome = sexy_outcome )
-    mrx  =  tryCatch({
-        sprintf( '%s/%s/%s_%s_%sv%s_mr.rds',
-                         x_path,
-                         sex,
-                         exposure_category_1,
-                         outcome_category,
-                         exposure_type_1,
-                         outcome_type ) %>%
-            read_rds %>%
-            '['( c( 'b', 'se', 'pval' ) )
-    },
-    error = function(e){
-        stop( 'Invalid combination of parameters for X' )
-    })
     
-    mry  =  tryCatch({
-        sprintf( '%s/%s/%s_%s_%sv%s_mr.rds',
-                 y_path,
-                 sexy,
-                 exposure_category_2,
-                 outcome_category,
-                 exposure_type_2,
-                 outcome_type ) %>%
-            read_rds %>%
-            '['( c( 'b', 'se', 'pval' ) )
-    },
-    error = function(e){
-        stop( 'Invalid combination of parameters for Y' )
-    })
+    mrx  =  sprintf( '%s/%s/%s_%s_%sv%s_mr.rds',
+                     x_path,
+                     sex,
+                     exposure_category_1,
+                     outcome_category,
+                     exposure_type_1,
+                     outcome_type ) %>%
+        read_rds %>%
+        '['( c( 'b', 'se', 'pval' ) )
+    
+    mry  =  sprintf( '%s/%s/%s_%s_%sv%s_mr.rds',
+                     y_path,
+                     sexy,
+                     exposure_category_2,
+                     outcome_category,
+                     exposure_type_2,
+                     outcome_type ) %>%
+        read_rds %>%
+        '['( c( 'b', 'se', 'pval' ) )
     
     if (bonferroni_correction) {
         threshold_x  =  threshold / prod( dim( mrx$b ) )
@@ -837,9 +844,9 @@ compare_2_outcomes  =  function( exposure_category,
         lapply( rownames ) %>%
         do.call( intersect, . )
     
-    mrx  =  mrx %>%
+    mrx  =  mrx[ c('b', 'se', 'pval') ] %>%
         lapply( function( x ) x[ common_exposures, out_trait_1, drop = FALSE ] )
-    mry  =  mry %>%
+    mry  =  mry[ c('b', 'se', 'pval') ] %>%
         lapply( function( x ) x[ common_exposures, out_trait_2, drop = FALSE ] )
     
     if (exposure_type == 't') {
@@ -911,7 +918,6 @@ barplot_pcs  =  function( category,
                           sex = 'both_sexes',
                           sex_pca = '',
                           show_sexes = c( 'both_sexes', 'female', 'male' ),
-                          match_pc_numbers = TRUE,
                           single = length( show_sexes ) == 1,
                           keep_order = FALSE ){
     if (category == 'brain') {
@@ -950,13 +956,6 @@ barplot_pcs  =  function( category,
         } )
     
     numbers  =  rep( pc_number, 3 )
-    if (match_pc_numbers) {
-        if (pc_number == 3) {
-            numbers[3] = 4
-        } else if (pc_number == 4) {
-            numbers[3] = 3
-        }
-    }
     names( numbers )  =  c( 'both_sexes', 'female', 'male' )
     
     pc_names  =  names( numbers ) %>%
@@ -1092,8 +1091,8 @@ barplot_pcs  =  function( category,
 bidirectional_mr_plot  =  function( category_1,
                                     category_2,
                                     sex = 'both_sexes',
-                                    sex_ivs = sex,
-                                    sex_pca = sex_ivs,
+                                    sex_ivs = 'both_sexes',
+                                    sex_pca = 'both_sexes',
                                     type_1 = 'p',
                                     type_2 = 't',
                                     trait = NULL,
@@ -1106,45 +1105,35 @@ bidirectional_mr_plot  =  function( category_1,
                                                               sex ) %>%
                                         read_rds,
                                     ... ){
-    if (category_1 == category_2) {
-        stop( 'You must select different categories' )
-    }
     
-    sex_full = sex_name( sex,
-                         sex_ivs = sex_ivs,
-                         sex_pca = ifelse( 'dxa' %in% c(type_1, type_2),
-                                           'both_sexes',
-                                           sex_pca ) )
+    sex1_full = sex_name( sex_exposure = c( 'both_sexes', 'male', 'female' )[ sex == c( 'both_sexes', 'female', 'male' ) ],
+                          sex_outcome = sex,
+                          sex_ivs = sex_ivs,
+                          sex_pca = sex_pca )
+    sex2_full = sex_name( sex_exposure = sex,
+                          sex_outcome = c( 'both_sexes', 'male', 'female' )[ sex == c( 'both_sexes', 'female', 'male' ) ],
+                          sex_ivs = sex_ivs,
+                          sex_pca = sex_pca )
     
-    direction_1  =  tryCatch({
-        sprintf( '%s/%s/%s_%s_%sv%s_mr.rds',
-                 path,
-                 sex_full,
-                 category_1,
-                 category_2,
-                 type_1,
-                 type_2 ) %>%
-            read_rds %>%
-            '['( c( 'b', 'se', 'pval' ) )
-    },
-    error = function(e){
-        stop( 'Invalid combination of parameters' )
-    })
+    direction_1  =  sprintf( '%s/%s/%s_%s_%sv%s_mr.rds',
+                             path,
+                             sex1_full,
+                             category_1,
+                             category_2,
+                             type_1,
+                             type_2 ) %>%
+        read_rds %>%
+        '['( c( 'b', 'se', 'pval' ) )
     
-    direction_2  =  tryCatch({
-        sprintf( '%s/%s/%s_%s_%sv%s_mr.rds',
-                 path,
-                 sex_full,
-                 category_2,
-                 category_1,
-                 type_2,
-                 type_1 ) %>%
-            read_rds %>%
-            '['( c( 'b', 'se', 'pval' ) )
-    },
-    error = function(e){
-        stop( 'Invalid combination of parameters' )
-    })
+    direction_2  =  sprintf( '%s/%s/%s_%s_%sv%s_mr.rds',
+                             path,
+                             sex2_full,
+                             category_2,
+                             category_1,
+                             type_2,
+                             type_1 ) %>%
+        read_rds %>%
+        '['( c( 'b', 'se', 'pval' ) )
     
     if (bonferroni_correction) {
         threshold_x  =  threshold / ( dim( direction_1$b ) %>% prod )
@@ -1196,7 +1185,7 @@ bidirectional_mr_plot  =  function( category_1,
     }
     
     if (!is.null( trait )) {
-        if(type_1 != 'p'){
+        if(type_1 == 't'){
             trait   =  .convert_name( trait, direction_1, all_phenotypes )
             direction_1  =  direction_1 %>%
                 lapply( function( x ) x[ trait, , drop = FALSE ] )
@@ -1234,22 +1223,32 @@ bidirectional_mr_plot  =  function( category_1,
     trait_1  =  rep( rownames( direction_1$b ), times = ncol( direction_1$b ) )
     trait_2  =  rep( colnames( direction_1$b ), each  = nrow( direction_1$b ) )
     
+    sex_title  =  c( both_sexes = 'Cross-sex',
+                     female = 'Female-specific',
+                     male = 'Male-specific' )
+    
     if (!is.null( trait )) {
-        main_title  =  paste0( 'Bidirectional MR<br>', names( trait ), ' vs ', category_2 )
+        main_title  =  sprintf( 'Bidirectional %s MR effects\n%s vs %s',
+                                sex_title[ sex ],
+                                names(trait),
+                                category_2 )
         x_label  =  paste( names( trait ), '->', category_2 )
         y_label  =  paste( category_2,     '->', names( trait ) )
-        outcome_descriptions  =  paste0( trait_2, '<br>',
-                                         '  v p = ', formatC( mrx$pval, format = 'e', digits = 2 ), '<br>',
+        outcome_descriptions  =  paste0( trait_2, '\n',
+                                         '  v p = ', formatC( mrx$pval, format = 'e', digits = 2 ), '\n',
                                          '  < p = ', formatC( mry$pval, format = 'e', digits = 2 ) ) %>%
             tibble( hover_text = .,
                     group = outcomes$group,
                     description = trait_2 )
     } else {
-        main_title  =  paste0( 'Bidirectional MR<br>', category_1, ' vs ', category_2 )
+        main_title  =  sprintf( 'Bidirectional %s MR effects\n%s vs %s',
+                                sex_title[ sex ],
+                                category_1,
+                                category_2 )
         x_label  =  paste( category_1, '->', category_2 )
         y_label  =  paste( category_2, '->', category_1 )
-        outcome_descriptions  =  paste0( trait_1, ' - ', trait_2, '<br>',
-                                         '  v p = ', formatC( mrx$pval, format = 'e', digits = 2 ), '<br>',
+        outcome_descriptions  =  paste0( trait_1, ' - ', trait_2, '\n',
+                                         '  v p = ', formatC( mrx$pval, format = 'e', digits = 2 ), '\n',
                                          '  < p = ', formatC( mry$pval, format = 'e', digits = 2 ) ) %>%
             tibble( hover_text = .,
                     group = outcomes$group,
@@ -2200,7 +2199,7 @@ create_pascal_tree  =  function( phenotype,
 
 pascal_heatmap  =  function( phenotypes = NULL,
                              sex = 'both_sexes',
-                             sex_pca = 'female',
+                             sex_pca = 'both_sexes',
                              prune = TRUE,
                              pascal_path = PASCAL_PATH,
                              pascal_pattern = PASCAL_FILENAME %>%
@@ -2220,13 +2219,13 @@ pascal_heatmap  =  function( phenotypes = NULL,
                              fdr = TRUE,
                              threshold = 0.05,
                              bonferroni = !fdr,
-                             column_order = c( 'fpc1',
+                             column_order = c( 'pc1',
                                                '21002_irnt',
-                                               'fpc2',
+                                               'pc2',
                                                '21001_irnt',
                                                'whr',
-                                               'fpc3',
-                                               'fpc4' ),
+                                               'pc3',
+                                               'pc4' ),
                              column_names = COLUMN_NAMES,
                              # title = sprintf( 'Pathway enrichment for %s',
                              #                  ifelse( is.numeric(phenotype),
@@ -2334,22 +2333,22 @@ pascal_heatmap  =  function( phenotypes = NULL,
 }
 
 
-fuma_heatmap  =  function( phenotypes = c( 'fpc1',
+fuma_heatmap  =  function( phenotypes = c( 'pc1',
                                            '21002_irnt',
-                                           'fpc2',
+                                           'pc2',
                                            '21001_irnt',
                                            'whr',
-                                           'fpc3',
-                                           'fpc4' ),
+                                           'pc3',
+                                           'pc4' ),
                            dataset = 'gtex_v8_ts_avg_log2TPM',
                            data_path = FUMA_DATA_PATH %>%
-                               sprintf( PREFIX ),
+                               sprintf( 'no_sample_overlap' ),
                            sex = 'both_sexes',
-                           sex_pca = 'female',
+                           sex_pca = 'both_sexes',
                            fuma_filenames = sprintf( '%s/body_%s_%s/magma_exp_%s.gsa.out',
                                                      data_path,
-                                                     phenotypes,
                                                      sex,
+                                                     phenotypes,
                                                      dataset ),
                            descriptions = sprintf( '%s/%s.rds',
                                                    data_path,
@@ -2359,17 +2358,17 @@ fuma_heatmap  =  function( phenotypes = c( 'fpc1',
                                        tissue_group ),
                            title_text = 'MAGMA tissue enrichment',
                            ordered = TRUE,
-                           prune = TRUE,
+                           prune = FALSE,
                            fdr = FALSE,
                            threshold = 0.05,
                            bonferroni = !fdr,
-                           column_order = c( 'fpc1',
+                           column_order = c( 'pc1',
                                              '21002_irnt',
-                                             'fpc2',
+                                             'pc2',
                                              '21001_irnt',
                                              'whr',
-                                             'fpc3',
-                                             'fpc4' ),
+                                             'pc3',
+                                             'pc4' ),
                            column_names = COLUMN_NAMES,
                            group_order = c( 'Brain',
                                             'Hormonal',
@@ -2377,14 +2376,18 @@ fuma_heatmap  =  function( phenotypes = c( 'fpc1',
                                             'Cells',
                                             'Digestive',
                                             'Female',
-                                            'Other',
-                                            'Vascular',
                                             'Male',
                                             'Skin',
+                                            'Vascular',
+                                            'Other',
                                             'Prenatal',
                                             'Infancy',
                                             'Childhood',
                                             'Adulthood' ),
+                           # title = sprintf( 'Pathway enrichment for %s',
+                           #                  ifelse( is.numeric(phenotype),
+                           #                          paste0( 'PC', phenotype ),
+                           #                          phenotype ) ),
                            ... ){
     fuma_results  =  fuma_filenames %>%
         setNames( phenotypes ) %>%
@@ -2411,7 +2414,7 @@ fuma_heatmap  =  function( phenotypes = c( 'fpc1',
                     log10)
             } )
     } else if (bonferroni) {
-        threshold  =  -log10( threshold / nrow( fuma_results ) )
+        threshold  =  -log10( threshold / (nrow( fuma_results ) * 4) )
     } else {
         threshold  =  -log10( threshold )
     }
@@ -2426,14 +2429,20 @@ fuma_heatmap  =  function( phenotypes = c( 'fpc1',
         to_keep  =  names(to_keep)[ to_keep ]
         fuma_results  =  fuma_results %>%
             filter( tissue_group %in% to_keep )
+        fuma_results  =  fuma_results[ , -c(1:2) ] %>%
+            apply( 1, max ) %>%
+            '>'( threshold ) %>%
+            '['( fuma_results, .,  )
+        
         descriptions  =  descriptions %>%
             filter( tissue_group %in% to_keep )
-        # if (!is.null( group_order )) {
-        #     group_order = group_order[ group_order %in% to_keep ]
-        # }
+        if (!is.null( group_order )) {
+            group_order = group_order[ group_order %in% to_keep ]
+        }
+        
+    } else {
+        group_order  =  group_order[ group_order %in% fuma_results$tissue_group ]
     }
-    
-    group_order  =  group_order[ group_order %in% fuma_results$tissue_group ]
     
     if (is.null( column_order )) {
         fuma_results  =  (hclust( fuma_results[ , -c(1:ncol(descriptions)) ] %>% t %>% dist )$order + ncol(descriptions)) %>%
@@ -2468,17 +2477,13 @@ fuma_heatmap  =  function( phenotypes = c( 'fpc1',
         split( .$tissue_group ) %>%
         '['( group_order ) %>%
         map2( names( . ), function( mydata, myname ) {
-            if (nrow( mydata ) > 1){
-                if (str_detect( 'gtex', dataset )) {
-                    mydata = hclust( mydata[ , -c(1:ncol(descriptions)) ] %>%
-                                         (function(x){
-                                             dist( x ) + dist( x < threshold )
-                                         }) %>%
-                                         dist )$order %>%
-                        '['( mydata, .,  )
-                } else {
-                    mydata  =  mydata[ nrow(mydata):1, ]
-                }
+            if (nrow( mydata ) > 1) {
+                mydata = hclust( mydata[ , -c(1:ncol(descriptions)) ] %>%
+                                     (function(x){
+                                         dist( x ) + dist( x < threshold )
+                                     }) %>%
+                                     dist )$order %>%
+                    '['( mydata, .,  )
             }
             
             mydata %>%
@@ -2502,6 +2507,12 @@ fuma_heatmap  =  function( phenotypes = c( 'fpc1',
                              hoverinfo = 'text',
                              colorscale = scale_colors[[ myname ]]
                 ) %>%
+                # add_annotations( x = colnames( fuma_results )[ -c(1:ncol(descriptions)) ],
+                #                  y = mydata$tissue,
+                #                  text = 10^( -mydata[ , -c(1:ncol(descriptions)) ] ),
+                #                  showarrow = FALSE,
+                #                  ax = 20,
+                #                  ay = -20 ) %>%
                 layout( yaxis = list( legend = list( title = list( text = myname ) ) ),
                         xaxis = list( 
                             tickmode = 'array',

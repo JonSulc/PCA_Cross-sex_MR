@@ -1,16 +1,10 @@
-prefix  =  '.'
 source( 'results_analysis.R' )
 
-all_phenotypes  =  read_rds( sprintf( '%s/data/all_phenotypes_combined.rds',
-                                      prefix ) )
+all_phenotypes  =  read_rds( './data/all_phenotypes_combined.rds' )
 
-dxa_traits  =  all_phenotypes %>%
-    filter( category == 'dxa' ) %>%
-    (function( x ) setNames( x$phenotype, x$description ))
-
-PATH            =  paste0( prefix, '/thr5e-08het0.001rev-1.644854b10_%s' )
-DATA_PATH       =  paste0( prefix, '/data/' )
-FUMA_DATA_PATH  =  paste0( prefix, '/fuma/results' )
+PATH            =  'thr5e-08het0.001rev-1.644854b10_%s'
+DATA_PATH       =  'data/'
+FUMA_DATA_PATH  =  'fuma/results'
 
 server  =  function( input, output, session ) {
     output$mrplot  =  renderPlotly({
@@ -18,10 +12,8 @@ server  =  function( input, output, session ) {
         if (input$mrtype == 'mvf') {
             if (input$exposure_type == 'p') {
                 exposure = input$pc_number
-            } else if (input$exposure_type == 't') {
-                exposure = input$trait
             } else {
-                exposure = input$dxa
+                exposure = input$trait
             }
             
             arguments <<- list( exposure_category_1 = input$exposure_category,
@@ -51,62 +43,70 @@ server  =  function( input, output, session ) {
                                 showlegend = 'showlegend' %in% input$plot_options,
                                 export_image = 'export_image' %in% input$plot_options,
                                 add_regression_line = 'add_regression_line' %in% input$plot_options,
-                                x_label = 'Male',
-                                y_label = 'Female' )
+                                x_label = 'Male-specific effect',
+                                y_label = 'Female-specific effect' )
             myplot <<- do.call( compare_2_exposures, arguments )
         } else if (input$mrtype == 'bimr') {
             if (input$type_1 == 'p') {
                 exposure = input$pc_number_1
-            } else if (input$type_1 == 't') {
-                exposure = input$trait_1
             } else {
-                exposure = input$dxa_1
+                exposure = input$trait_1
             }
             
             arguments <<- list( category_1 = input$category_1,
                                 category_2 = input$category_2,
                                 sex = input$sex,
-                                sex_ivs = input$sex_ivs,
                                 sex_pca = input$sex_pca,
                                 type_1 = input$type_1,
                                 type_2 = input$type_2,
                                 trait = exposure,
-                                separate_xy = 'separate_xy' %in% input$plot_options,
+                                # separate_xy = 'separate_xy' %in% input$plot_options,
                                 show_subcategories = 'show_subcategories' %in% input$plot_options,
                                 path = sprintf( PATH,
                                                 input$mr_method_x ),
                                 data_path = DATA_PATH,
                                 export_image = 'export_image' %in% input$plot_options,
                                 showlegend = 'showlegend' %in% input$plot_options,
-                                add_regression_line = 'add_regression_line' %in% input$plot_options,
+                                # add_regression_line = 'add_regression_line' %in% input$plot_options,
                                 flip_line = 'flip_line' %in% input$plot_options )
             do.call( bidirectional_mr_plot, arguments )
         } else if (input$mrtype == '2exp') {
             if (input$type_1 == 'p') {
                 exposure_1 = input$pc_number_1
-            } else if (input$type_1 == 't') {
-                exposure_1 = input$trait_1
             } else {
-                exposure_1 = input$dxa_1
+                exposure_1 = input$trait_1
             }
             if (input$type_2 == 'p') {
                 exposure_2 = input$pc_number_2
-            } else if (input$type_2 == 't') {
-                exposure_2 = input$trait_2
             } else {
-                exposure_2 = input$dxa_2
+                exposure_2 = input$trait_2
             }
+            
+            if (input$sexx_mr == 'male') {
+                sexx_exposure  =  'female'
+            } else if (input$sexx_mr == 'female') {
+                sexx_exposure  =  'male'
+            } else {
+                sexx_exposure  =  'both_sexes'
+            }
+            
+            if (input$sexy_mr == 'male') {
+                sexy_exposure  =  'female'
+            } else if (input$sexy_mr == 'female') {
+                sexy_exposure  =  'male'
+            } else {
+                sexy_exposure  =  'both_sexes'
+            }
+            
             arguments <<- list( exposure_category_1 = input$category_1,
                                 exposure_category_2 = input$category_2,
                                 outcome_category    = input$outcome_category,
-                                sex_exposure = input$sexx_exposure,
-                                sex_ivs      = input$sexx_ivs,
+                                sex_exposure = sexx_exposure,
                                 sex_pca      = input$sexx_pca,
-                                sex_outcome  = input$sexx_outcome,
-                                sexy_exposure = input$sexy_exposure,
-                                sexy_ivs     = input$sexy_ivs,
+                                sex_outcome  = input$sexx_mr,
+                                sexy_exposure = sexy_exposure,
                                 sexy_pca     = input$sexy_pca,
-                                sexy_outcome = input$sexy_outcome,
+                                sexy_outcome = input$sexy_mr,
                                 exposure_type_1 = input$type_1,
                                 exposure_type_2 = input$type_2,
                                 outcome_type = input$outcome_type,
