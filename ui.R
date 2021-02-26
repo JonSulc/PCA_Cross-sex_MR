@@ -55,13 +55,13 @@ ui  =  dashboardPage(
                                  conditionalPanel(
                                      condition = 'input.mrtype == "bimr"',
                                      fluidRow(
-                                         column( 4,
+                                         column( 8,
                                                  radioButtons(
                                                      'sex',
-                                                     h3( 'Sex (Betas)' ),
-                                                     choices = list( 'X-sex meta'   = 'both_sexes',
-                                                                     'Female' = 'female',
-                                                                     'Male'   = 'male' ),
+                                                     h3( 'Sex (MR effect)' ),
+                                                     choices = list( 'Cross-sex MR'      = 'both_sexes',
+                                                                     'Female-specific (male exp. - female out.)' = 'female',
+                                                                     'Male-specific (female exp. - male out.)'   = 'male' ),
                                                      selected = 'both_sexes',
                                                      inline = FALSE
                                                  )
@@ -73,21 +73,21 @@ ui  =  dashboardPage(
                                                      choices = list( 'Both'   = 'both_sexes',
                                                                      'Female' = 'female',
                                                                      'Male'   = 'male' ),
-                                                     selected = 'female',
-                                                     inline = FALSE
-                                                 )
-                                         ),
-                                         column( 4,
-                                                 radioButtons(
-                                                     'sex_ivs',
-                                                     h3( 'Sex (IVs)' ),
-                                                     choices = list( 'Both'   = 'both_sexes',
-                                                                     'Female' = 'female',
-                                                                     'Male'   = 'male' ),
                                                      selected = 'both_sexes',
                                                      inline = FALSE
                                                  )
-                                         )
+                                         )#,
+                                         # column( 4,
+                                         #         radioButtons(
+                                         #             'sex_ivs',
+                                         #             h3( 'Sex (IVs)' ),
+                                         #             choices = list( 'Both'   = 'both_sexes',
+                                         #                             'Female' = 'female',
+                                         #                             'Male'   = 'male' ),
+                                         #             selected = 'both_sexes',
+                                         #             inline = FALSE
+                                         #         )
+                                         # )
                                      )
                                  ),
                                  conditionalPanel(
@@ -110,8 +110,7 @@ ui  =  dashboardPage(
                                                      'exposure_type',
                                                      'Type',
                                                      choices = list( 'PC'    = 'p',
-                                                                     'Trait' = 't',
-                                                                     'DXA'   = 'dxa' ),
+                                                                     'Trait' = 't' ),
                                                      selected = 'p',
                                                      inline = TRUE
                                                  )
@@ -128,10 +127,6 @@ ui  =  dashboardPage(
                                      conditionalPanel(
                                          condition = 'input.exposure_type == "t"',
                                          uiOutput( 'trait_select' )
-                                     ),
-                                     conditionalPanel(
-                                         condition = 'input.exposure_type == "dxa"',
-                                         uiOutput( 'dxa_select' )
                                      )
                                  ),
                                  
@@ -139,83 +134,63 @@ ui  =  dashboardPage(
                                      condition = 'input.mrtype == "2exp"',
                                      fluidRow(
                                          h4( 'X axis' ),
-                                         column( 3,
+                                         column( 8,
                                                  radioButtons(
-                                                     'sexx_exposure',
-                                                     'Sex exposure',
-                                                     choices = list( 'X-sex meta'   = 'both_sexes',
-                                                                     'Female' = 'female',
-                                                                     'Male'   = 'male' ),
+                                                     'sexx_mr',
+                                                     'Sex (MR effect)',
+                                                     choices = list( 'Cross-sex MR'      = 'both_sexes',
+                                                                     'Female-specific (male exp. - female out.)' = 'female',
+                                                                     'Male-specific (female exp. - male out.)'   = 'male' ),
                                                      selected = 'both_sexes'
                                                  )
                                          ),
-                                         column( 3,
-                                                 radioButtons(
-                                                     'sexx_outcome',
-                                                     'Sex outcome',
-                                                     choices = list( 'X-sex meta'   = 'both_sexes',
-                                                                     'Female' = 'female',
-                                                                     'Male'   = 'male' ),
-                                                     selected = 'both_sexes'
-                                                 )
-                                         ),
-                                         column( 3,
+                                         # column( 4,
+                                         #         radioButtons(
+                                         #             'sexx_outcome',
+                                         #             'Sex outcome',
+                                         #             choices = list( 'X-sex meta'   = 'both_sexes',
+                                         #                             'Female' = 'female',
+                                         #                             'Male'   = 'male' ),
+                                         #             selected = 'both_sexes'
+                                         #         )
+                                         # ),
+                                         column( 4,
                                                  radioButtons(
                                                      'sexx_pca',
                                                      'Sex (PCA)',
                                                      choices = list( 'Both'   = 'both_sexes',
                                                                      'Female' = 'female',
                                                                      'Male'   = 'male' ),
-                                                     selected = 'female'
-                                                 )
-                                         ),
-                                         column( 3,
-                                                 radioButtons(
-                                                     'sexx_ivs',
-                                                     'Sex (IVs)',
-                                                     choices = list( 'Both'   = 'both_sexes',
-                                                                     'Female' = 'female',
-                                                                     'Male'   = 'male' ),
                                                      selected = 'both_sexes'
                                                  )
-                                         )
+                                         )#,
+                                         # column( 3,
+                                         #         radioButtons(
+                                         #             'sexx_ivs',
+                                         #             'Sex (IVs)',
+                                         #             choices = list( 'Both'   = 'both_sexes',
+                                         #                             'Female' = 'female',
+                                         #                             'Male'   = 'male' ),
+                                         #             selected = 'both_sexes'
+                                         #         )
+                                         # )
                                      ),
                                      fluidRow(
                                          h4( 'Y axis' ),
-                                         column( 3,
+                                         column( 8,
                                                  radioButtons(
-                                                     'sexy_exposure',
-                                                     'Sex exposure',
-                                                     choices = list( 'X-sex meta'   = 'both_sexes',
-                                                                     'Female' = 'female',
-                                                                     'Male'   = 'male' ),
+                                                     'sexy_mr',
+                                                     'Sex (MR effect)',
+                                                     choices = list( 'Cross-sex MR'      = 'both_sexes',
+                                                                     'Female-specific (male exp. - female out.)' = 'female',
+                                                                     'Male-specific (female exp. - male out.)'   = 'male' ),
                                                      selected = 'both_sexes'
                                                  )
                                          ),
-                                         column( 3,
-                                                 radioButtons(
-                                                     'sexy_outcome',
-                                                     'Sex outcome',
-                                                     choices = list( 'X-sex meta'   = 'both_sexes',
-                                                                     'Female' = 'female',
-                                                                     'Male'   = 'male' ),
-                                                     selected = 'both_sexes'
-                                                 )
-                                         ),
-                                         column( 3,
+                                         column( 4,
                                                  radioButtons(
                                                      'sexy_pca',
                                                      'Sex (PCA)',
-                                                     choices = list( 'Both'   = 'both_sexes',
-                                                                     'Female' = 'female',
-                                                                     'Male'   = 'male' ),
-                                                     selected = 'female'
-                                                 )
-                                         ),
-                                         column( 3,
-                                                 radioButtons(
-                                                     'sexy_ivs',
-                                                     'Sex (IVs)',
                                                      choices = list( 'Both'   = 'both_sexes',
                                                                      'Female' = 'female',
                                                                      'Male'   = 'male' ),
@@ -255,10 +230,6 @@ ui  =  dashboardPage(
                                          condition = 'input.type_1 == "t"',
                                          uiOutput( 'trait_1_select')
                                      ),
-                                     conditionalPanel(
-                                         condition = 'input.type_1 == "dxa"',
-                                         uiOutput( 'dxa_1_select' )
-                                     ),
                                      fluidRow(
                                          column( 7,
                                                  selectInput(
@@ -289,11 +260,11 @@ ui  =  dashboardPage(
                                          conditionalPanel(
                                              condition = 'input.type_2 == "t"',
                                              uiOutput( 'trait_2_select')
-                                         ),
-                                         conditionalPanel(
-                                             condition = 'input.type_2 == "dxa"',
-                                             uiOutput( 'dxa_2_select')
-                                         )
+                                         )#,
+                                         # conditionalPanel(
+                                         #     condition = 'input.type_2 == "dxa"',
+                                         #     uiOutput( 'dxa_2_select')
+                                         # )
                                          
                                      )
                                  ),
