@@ -153,8 +153,7 @@ server  =  function( input, output, session ) {
     output$type_1_select  =  renderUI({
         if (input$category_1 == 'body') {
             choices = list( 'PC'    = 'p',
-                            'Trait' = 't',
-                            'DXA'   = 'dxa' )
+                            'Trait' = 't' )
             selected = 'p'
         } else {
             choices = list( 'Trait' = 't' )
@@ -178,13 +177,6 @@ server  =  function( input, output, session ) {
             choices = traits
         )
     })
-    output$dxa_select  =  renderUI({
-        selectInput(
-            'dxa',
-            'X DXA trait',
-            choices = dxa_traits
-        )
-    })
     output$trait_1_select  =  renderUI({
         traits_1  =  all_phenotypes %>%
             filter( category == input$category_1 )
@@ -195,19 +187,11 @@ server  =  function( input, output, session ) {
             choices = traits_1
         )
     })
-    output$dxa_1_select  =  renderUI({
-        selectInput(
-            'dxa_1',
-            'X trait',
-            choices = dxa_traits
-        )
-    })
     
     output$type_2_select  =  renderUI({
         if (input$category_2 == 'body') {
             choices = list( 'PC'    = 'p',
-                            'Trait' = 't',
-                            'DXA'   = 'dxa' )
+                            'Trait' = 't' )
         } else {
             choices = list( 'Trait' = 't' )
         }
@@ -227,13 +211,6 @@ server  =  function( input, output, session ) {
             'trait_2',
             'Y trait',
             choices = traits_2
-        )
-    })
-    output$dxa_2_select  =  renderUI({
-        selectInput(
-            'dxa_2',
-            'Y DXA trait',
-            choices = dxa_traits
         )
     })
     
@@ -264,13 +241,6 @@ server  =  function( input, output, session ) {
             choices = outcome
         )
     })
-    output$dxa_out_select  =  renderUI({
-        selectInput(
-            'out_dxa',
-            'Outcome DXA trait',
-            choices = dxa_traits
-        )
-    })
     
     output$out_trait_1_select  =  renderUI({
         out_traits_1  =  all_phenotypes %>%
@@ -280,13 +250,6 @@ server  =  function( input, output, session ) {
             'out_trait_1',
             'X outcome trait',
             choices = out_traits_1
-        )
-    })
-    output$out_dxa_1_select  =  renderUI({
-        selectInput(
-            'out_dxa_1',
-            'X DXA outcome',
-            choices = dxa_traits
         )
     })
     
@@ -300,20 +263,12 @@ server  =  function( input, output, session ) {
             choices = out_traits_2
         )
     })
-    output$out_dxa_2_select  =  renderUI({
-        selectInput(
-            'out_dxa_2',
-            'Y DXA outcome',
-            choices = dxa_traits
-        )
-    })
     output$mr_method_x = renderUI({
         radioButtons( 'mr_method_x',
                       'X MR method',
                       inline = TRUE,
                       choices = list( 'IVW'    = 'mr_ivw',
-                                      'Median' = 'mr_weighted_median',
-                                      'Mode'   = 'mr_weighted_mode' ),
+                                      'Median' = 'mr_weighted_median' ),
                       selected = 'mr_ivw' )
     })
     output$mr_method_y = renderUI({
@@ -321,8 +276,7 @@ server  =  function( input, output, session ) {
                       'Y MR method',
                       inline = TRUE,
                       choices = list( 'IVW'    = 'mr_ivw',
-                                      'Median' = 'mr_weighted_median',
-                                      'Mode'   = 'mr_weighted_mode' ),
+                                      'Median' = 'mr_weighted_median' ),
                       selected = 'mr_ivw' )
     })
 }

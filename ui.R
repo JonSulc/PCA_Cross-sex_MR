@@ -260,11 +260,7 @@ ui  =  dashboardPage(
                                          conditionalPanel(
                                              condition = 'input.type_2 == "t"',
                                              uiOutput( 'trait_2_select')
-                                         )#,
-                                         # conditionalPanel(
-                                         #     condition = 'input.type_2 == "dxa"',
-                                         #     uiOutput( 'dxa_2_select')
-                                         # )
+                                         )
                                          
                                      )
                                  ),
